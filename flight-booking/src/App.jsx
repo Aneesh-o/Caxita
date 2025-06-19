@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Container, Form, Button, Row, Col, Table, Card, Spinner } from 'react-bootstrap';
+import {
+  Container, Form, Button, Row, Col, Card, Spinner, InputGroup
+} from 'react-bootstrap';
 import { addFlightDetailsApi, getFlightDetailsApi } from './Services/allAPi';
 
 function App() {
@@ -8,10 +9,15 @@ function App() {
     airline: '', flightNumber: '', departureCity: '', arrivalCity: '',
     departureDate: '', arrivalDate: '', departureTime: '', arrivalTime: '', price: ''
   });
+
   const [flights, setFlights] = useState([]);
   const [filters, setFilters] = useState({ minPrice: '', maxPrice: '', airline: '' });
   const [sort, setSort] = useState({ sortBy: '', order: '' });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchFlights();
+  }, [filters, sort]);
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -59,13 +65,10 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    fetchFlights();
-  }, [filters, sort]);
-
   return (
-    <Container>
-      <h2 className="text-center my-4">Flight Search System</h2>
+    <Container className="py-4">
+      <h2 className="text-center mb-4">Flight Search System</h2>
+
       <Form onSubmit={handleSubmit} className="mb-4">
         <Row>
           <Col md={4}><Form.Group><Form.Label>Airline</Form.Label><Form.Control name="airline" required value={form.airline} onChange={handleChange} /></Form.Group></Col>
@@ -85,55 +88,59 @@ function App() {
         <Button className="mt-3" type="submit">Add Flight</Button>
       </Form>
 
-      <Card className="p-3 mb-4">
+      <Card className="p-3 mb-4 bg-light">
+        <h5>Filter & Sort Flights</h5>
         <Row>
-          <Col md={4}><Form.Control placeholder="Min Price" name="minPrice" onChange={handleFilterChange} /></Col>
-          <Col md={4}><Form.Control placeholder="Max Price" name="maxPrice" onChange={handleFilterChange} /></Col>
-          <Col md={4}><Form.Control placeholder="Airline (e.g. Emirates)" name="airline" onChange={handleFilterChange} /></Col>
-        </Row>
-        <Row className="mt-3">
-          <Col md={4}><Button onClick={() => handleSort('price', 'asc')}>Price Low to High</Button></Col>
-          <Col md={4}><Button onClick={() => handleSort('price', 'desc')}>Price High to Low</Button></Col>
-          <Col md={4}><Button onClick={() => handleSort('airline', 'asc')}>Flight A-Z</Button></Col>
+          <Col md={3}><Form.Control placeholder="Min Price" name="minPrice" onChange={handleFilterChange} /></Col>
+          <Col md={3}><Form.Control placeholder="Max Price" name="maxPrice" onChange={handleFilterChange} /></Col>
+          <Col md={3}><Form.Control placeholder="Airline (e.g. Emirates)" name="airline" onChange={handleFilterChange} /></Col>
+          <Col md={3} className="d-flex gap-2">
+            <Button size="sm" variant="outline-primary" onClick={() => handleSort('price', 'asc')}>Cheapest</Button>
+            <Button size="sm" variant="outline-success" onClick={() => handleSort('price', 'desc')}>Expensive</Button>
+            <Button size="sm" variant="outline-warning" onClick={() => handleSort('airline', 'asc')}>A-Z</Button>
+          </Col>
         </Row>
       </Card>
 
-      {loading ? <Spinner animation="border" /> : (
-        <Table striped bordered responsive>
-          <thead>
-            <tr>
-              <th>Airline</th>
-              <th>Flight No</th>
-              <th>Route</th>
-              <th>Departure</th>
-              <th>Arrival</th>
-              <th>Duration</th>
-              <th>Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.isArray(flights) && flights.length > 0 ? (
-              flights.map(f => {
-                const dep = new Date(`${f.departureDate}T${f.departureTime}`);
-                const arr = new Date(`${f.arrivalDate}T${f.arrivalTime}`);
-                const duration = Math.floor((arr - dep) / 60000);
-                return (
-                  <tr key={f._id}>
-                    <td>{f.airline}</td>
-                    <td>{f.flightNumber}</td>
-                    <td>{f.departureCity} → {f.arrivalCity}</td>
-                    <td>{f.departureDate} {f.departureTime}</td>
-                    <td>{f.arrivalDate} {f.arrivalTime}</td>
-                    <td>{Math.floor(duration / 60)}h {duration % 60}m</td>
-                    <td>KWD {f.price}</td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr><td colSpan="7" className="text-center">No flights found</td></tr>
-            )}
-          </tbody>
-        </Table>
+      {loading ? (
+        <div className="text-center"><Spinner animation="border" /></div>
+      ) : (
+        flights.length > 0 ? (
+          flights.map((f, idx) => {
+            const dep = new Date(`${f.departureDate}T${f.departureTime}`);
+            const arr = new Date(`${f.arrivalDate}T${f.arrivalTime}`);
+            const duration = Math.floor((arr - dep) / 60000);
+            // const hours = Math.floor(duration / 60);
+            // const minutes = duration % 60;
+
+            return (
+              <Card className="mb-3 shadow-sm" key={idx}>
+                <Card.Body>
+                  <Row className="align-items-center">
+                    <Col md={2} className="text-center">
+                      <strong>{f.airline}</strong>
+                      <div className="text-muted">{f.flightNumber}</div>
+                    </Col>
+                    <Col md={4}>
+                      <div><strong>{f.departureCity}</strong> → <strong>{f.arrivalCity}</strong></div>
+                      <div>{f.departureDate} at {f.departureTime}</div>
+                      <div>{f.arrivalDate} at {f.arrivalTime}</div>
+                    </Col>
+                    {/* <Col md={3}>
+                      <div>Duration: {hours}h {minutes}m</div>
+                    </Col> */}
+                    <Col md={3} className="text-end">
+                      <h5 className="text-success">KWD {f.price}</h5>
+                      <Button variant="primary" size="sm">Book Now</Button>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            );
+          })
+        ) : (
+          <p className="text-center">No flights found</p>
+        )
       )}
     </Container>
   );
