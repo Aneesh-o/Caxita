@@ -1,8 +1,10 @@
-import commonApi from "./commonApi"
-import serverUrl from "./serverUrl"
+import commonApi from "./commonApi";
+import serverUrl from "./serverUrl";
 
-
-// seeker-registration
 export const addFlightDetailsApi = async (reqBody) => {
-    return await commonApi("POST", `${serverUrl}/addFlight`, reqBody)
-}
+    return await commonApi("POST", `${serverUrl}/addFlight`, reqBody);
+};
+
+export const getFlightDetailsApi = async (query = '') => {
+    return await commonApi("GET", `${serverUrl}/getDetails?${query}`);
+};
