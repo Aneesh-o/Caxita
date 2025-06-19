@@ -30,7 +30,7 @@ Alert messages for success/error events
 | API Comm. | Axios                         |
 
 **Clone Repository**
-git clone https://github.com/your-username/flight-search-system.git
+git clone https://github.com/Aneesh-o/Caxita
 
 **Install dependencies**
 npm install
